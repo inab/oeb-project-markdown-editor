@@ -41,6 +41,7 @@ jobs:
       run: |
         npm ci
         npm run build-dev
+        rm -rf node_modules
 
     - name: Upload artifacts
       uses: actions/upload-pages-artifact@v3
@@ -64,5 +65,5 @@ jobs:
     steps:
       - name: Deploy artifacts
         id: deployment
-        uses: actions/deploy-pages@4
+        uses: actions/deploy-pages@v4
 
