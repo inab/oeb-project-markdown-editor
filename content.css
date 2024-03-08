@@ -55,3 +55,7 @@
   padding-top: 0.2em;
   margin-bottom: var(--ck-spacing-large);
 }
+
+.ck-editor__editable_inline {
+    max-height: 80vh;
+}

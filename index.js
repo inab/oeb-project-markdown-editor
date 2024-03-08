@@ -13,7 +13,7 @@ const WEB_SPELL_CHECKER_LICENSE_KEY = '';
 import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic';
 
 import { Essentials } from '@ckeditor/ckeditor5-essentials';
-import { Autoformat } from '@ckeditor/ckeditor5-autoformat';
+// import { Autoformat } from '@ckeditor/ckeditor5-autoformat';
 import { BlockQuote } from '@ckeditor/ckeditor5-block-quote';
 import { Bold, Italic, Code, Strikethrough } from '@ckeditor/ckeditor5-basic-styles';
 import { CloudServices } from '@ckeditor/ckeditor5-cloud-services';
@@ -36,7 +36,7 @@ import { TextTransformation } from '@ckeditor/ckeditor5-typing';
 // import { SlashCommand } from '@ckeditor/ckeditor5-slash-command';
 
 import { ButtonView } from '@ckeditor/ckeditor5-ui';
-import checkIcon from '@ckeditor/ckeditor5-core/theme/icons/importexport.svg'
+import importexportIcon from '@ckeditor/ckeditor5-core/theme/icons/importexport.svg'
 import { Plugin } from '@ckeditor/ckeditor5-core';
 
 import parseDataUrl from 'parse-data-url';
@@ -48,38 +48,37 @@ class GenerateJSONEntry extends Plugin {
         // The button must be registered among the UI components of the editor
         // to be displayed in the toolbar.
         editor.ui.componentFactory.add( 'generate_json_entry', () => {
-            // The button will be an instance of ButtonView.
-            const button = new ButtonView();
+		// The button will be an instance of ButtonView.
+		const button = new ButtonView();
 
-            button.set( {
-                label: 'Download updated OEB community entry',
-                icon: checkIcon,
-                tooltip: true
-            } );
+		let oeb_server = editor.config.get("oeb_server");
+		let ce = editor.config.get("community_entry");
+		let community_id = ce["_id"];
+
+		button.set( {
+			label: `Download updated ${community_id} entry for ${oeb_server}`,
+			icon: importexportIcon,
+			tooltip: true
+		} );
 
 		button.on( 'execute', () => {
-			try {
-				let ce = editor.config.get("community_entry");
-				const summary = editor.getData();
-				// What it is needed to encode UTF-8 encoded contents in Javascript, sigh...
-				const encodedsummary = unescape(encodeURIComponent(summary));
-				const bdata = "data:text/plain;base64," + btoa(encodedsummary);
-				ce["_metadata"]["project:summary"] = bdata;
-				
-				const element = document.createElement('a');
-				const strce = JSON.stringify(ce, null, 4);
-				element.setAttribute('href', 'data:text/plain;base64,' + btoa(unescape(encodeURIComponent(strce))));
-				element.setAttribute('download', `community_${ce["_id"]}_${Date.now()}.json`);
+			const summary = editor.getData();
+			// What it is needed to encode UTF-8 encoded contents in Javascript, sigh...
+			const encodedsummary = unescape(encodeURIComponent(summary));
+			const bdata = "data:text/plain;base64," + btoa(encodedsummary);
+			ce["_metadata"]["project:summary"] = bdata;
+			
+			const element = document.createElement('a');
+			const strce = JSON.stringify(ce, null, 4);
+			element.setAttribute('href', 'data:text/plain;base64,' + btoa(unescape(encodeURIComponent(strce))));
+			element.setAttribute('download', `community_${community_id}_${oeb_server}_${Date.now()}.json`);
 
-				element.style.display = 'none';
-				document.body.appendChild(element);
+			element.style.display = 'none';
+			document.body.appendChild(element);
 
-				element.click();
+			element.click();
 
-				document.body.removeChild(element);
-			} catch(e) {
-				console.log(e);
-			}
+			document.body.removeChild(element);
 		} );
 
             return button;
@@ -210,13 +209,18 @@ const EMOJIS_ARRAY = [
 	{ character: '☀️', title: 'Sun' },
 ];
 
+const OEB_PRODUCTION_SERVER = "openebench.bsc.es";
+const OEB_DEVELOPMENT_SERVER = "dev-openebench.bsc.es";
+
 window.addEventListener("load", async (event) => {
 	const urlParams = new URLSearchParams(window.location.search);
 	const community_id = urlParams.has('community_id') ? urlParams.get('community_id') : "OEBC009";
+	const isdev = urlParams.has("dev") ? urlParams.get("dev") != "false" : false;
+	const oeb_server = isdev ? OEB_DEVELOPMENT_SERVER : OEB_PRODUCTION_SERVER;
 	const h2 = document.createElement('h2');
-	h2.appendChild(document.createTextNode(`(editing community ${community_id})`));
+	h2.appendChild(document.createTextNode(`(editing community ${community_id} from ${oeb_server})`));
 	document.getElementById("header-wrapper").appendChild(h2);
-	const response = await fetch("https://openebench.bsc.es/api/scientific/staged/Community/" + encodeURIComponent(community_id));
+	const response = await fetch(`https://${oeb_server}/api/scientific/staged/Community/${encodeURIComponent(community_id)}`);
 	let community_entry = await response.json();
 	
 	
@@ -245,6 +249,7 @@ window.addEventListener("load", async (event) => {
 
 	const editor = await ClassicEditor.create(elem, {
 		initialData: summary,
+		oeb_server: oeb_server,
 		community_entry: community_entry,
 		plugins: [
 			//Autoformat,
@@ -383,14 +388,14 @@ window.addEventListener("load", async (event) => {
 		table: {
 			contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
 		},
-		wproofreader: {
-			serviceId: WEB_SPELL_CHECKER_LICENSE_KEY,
-			lang: 'auto',
-			srcUrl:
-				'https://svc.webspellchecker.net/spellcheck31/wscbundle/wscbundle.js',
-			autoStartup: false,
-			ignoreClasses: ['image-inline'],
-		},
+		// wproofreader: {
+		// 	serviceId: WEB_SPELL_CHECKER_LICENSE_KEY,
+		// 	lang: 'auto',
+		// 	srcUrl:
+		// 		'https://svc.webspellchecker.net/spellcheck31/wscbundle/wscbundle.js',
+		// 	autoStartup: false,
+		// 	ignoreClasses: ['image-inline'],
+		// },
 	});
 		// })
 		// .catch((error) => {
