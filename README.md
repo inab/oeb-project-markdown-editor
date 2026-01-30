@@ -4,6 +4,18 @@ This proof of concept demonstrates how to edit the summary of an
 OpenEBench Scientific community and how to get a copy of the modified entry,
 in order to save it later through the [oeb-sci-admin-tools](https://gitlab.bsc.es/inb/elixir/openebench/oeb-sci-admin-tools).
 
+## ⚠️ Important Notice: Internal Link Anchors
+
+**Due to editor limitations, use `(#item1)` syntax for defining internal link anchors instead of HTML `<a id="item1"></a>`.**
+
+When you need to create an anchor point in your document:
+- ✅ **Use:** `(#item1)` 
+- ❌ **Don't use:** `<a id="item1"></a>` or `<a name="item1"></a>`
+
+These will be automatically converted to proper HTML anchors during processing.
+
+**Note:** This only affects anchor *definitions*. Regular markdown links like `[Jump to Item 1](#item1)` work normally. Also the external links.
+
 # Usage
 
 The demonstration URL is https://inab.github.io/oeb-project-markdown-editor/ .
